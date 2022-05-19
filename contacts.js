@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs/promises");
+const { v4: uuidv4 } = require("uuid");
 
 const contactsPath = path.resolve("./db/contacts.json");
 
@@ -13,30 +14,30 @@ async function listContacts() {
 }
 
 async function getContactById(contactId) {
-  const id = String(contactId);
   try {
     const data = await listContacts();
-    return data.filter((contact) => contact.id === id);
+    return data.filter((contact) => contact.id === String(contactId));
   } catch (err) {
     console.error(err);
   }
 }
 
 async function removeContact(contactId) {
-  const id = String(contactId);
   try {
     const sourceContacts = await listContacts();
-    const newContacts = sourceContacts.filter((contact) => contact.id !== id);
+    const newContacts = sourceContacts.filter(
+      (contact) => contact.id !== String(contactId)
+    );
     await fs.writeFile(contactsPath, JSON.stringify(newContacts), "utf8");
     return sourceContacts.filter((contact) => contact.id === id);
   } catch (err) {
-    console.erroe(err);
+    console.error(err);
   }
 }
 
 async function addContact(name, email, phone) {
   try {
-    const id = await getNewId();
+    const id = await uuidv4();
 
     const newContact = {
       id,
@@ -50,20 +51,6 @@ async function addContact(name, email, phone) {
 
     await fs.writeFile(contactsPath, JSON.stringify(newContacts), "utf8");
     return newContact;
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-async function getNewId() {
-  try {
-    const data = await listContacts();
-    const id = data.reduce((prev, contact) => {
-      if (Number(contact.id) > prev) {
-        return Number(contact.id);
-      }
-    }, 0);
-    return String(id + 1);
   } catch (err) {
     console.error(err);
   }
